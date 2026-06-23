@@ -1,0 +1,172 @@
+{
+  "murtis": [
+    {
+      "code": "GAN-001",
+      "name": "Royal Blue Ganpati",
+      "category": "Ganpati",
+      "size": "3.5 Ft",
+      "price": 15000,
+      "bookingAmount": 1000,
+      "status": "Available",
+      "photos": [
+        "/images/IMG_5752.jpg"
+      ],
+      "videos": [],
+      "description": "Beautiful Royal Blue Shringar Ganpati Idol with intricate hand-painted golden details. Perfect for home or society celebrations.",
+      "views": 124,
+      "createdAt": "2026-06-17T23:09:56.372Z"
+    },
+    {
+      "code": "GAN-002",
+      "name": "Lalbaugcha Raja Replica",
+      "category": "Ganpati",
+      "size": "4.0 Ft",
+      "price": 18500,
+      "bookingAmount": 1000,
+      "status": "Reserved",
+      "photos": [
+        "/images/IMG_5753.jpg"
+      ],
+      "videos": [],
+      "description": "Iconic Lalbaugcha Raja style pose, hand-sculpted in premium clay with a majestic red throne.",
+      "views": 450,
+      "createdAt": "2026-06-19T02:56:36.373Z"
+    },
+    {
+      "code": "GAN-003",
+      "name": "Dagadusheth Halwai Ganpati",
+      "category": "Ganpati",
+      "size": "5.0 Ft",
+      "price": 28000,
+      "bookingAmount": 2000,
+      "status": "Sold",
+      "photos": [
+        "/images/IMG_5754.jpg"
+      ],
+      "videos": [],
+      "description": "Stunning Dagadusheth Halwai replication adorned with heavy replica gold ornaments and crown.",
+      "views": 612,
+      "createdAt": "2026-06-20T06:43:16.373Z"
+    },
+    {
+      "code": "NAV-001",
+      "name": "Durga Murti Saree Style",
+      "category": "Navratri",
+      "size": "4.5 Ft",
+      "price": 22000,
+      "bookingAmount": 1500,
+      "status": "Available",
+      "photos": [
+        "/images/IMG_5755.jpg"
+      ],
+      "videos": [],
+      "description": "Vibrant hand-draped saree style Durga Devi Idol, featuring high-quality finishes and facial expressions.",
+      "views": 89,
+      "createdAt": "2026-06-20T20:36:36.373Z"
+    },
+    {
+      "code": "KRI-001",
+      "name": "Makhan Chor Krishna",
+      "category": "Krishna Theme",
+      "size": "2.5 Ft",
+      "price": 12000,
+      "bookingAmount": 1000,
+      "status": "Available",
+      "photos": [
+        "/images/IMG_5770.jpg"
+      ],
+      "videos": [],
+      "description": "Bal Krishna stealing butter from a pot. Features glossy marble finishing and handmade peacock feathers.",
+      "views": 78,
+      "createdAt": "2026-06-21T10:29:56.373Z"
+    },
+    {
+      "code": "MAV-001",
+      "name": "Shivaji Maharaj Theme Ganpati",
+      "category": "Mavla Theme",
+      "size": "3.0 Ft",
+      "price": 16000,
+      "bookingAmount": 1000,
+      "status": "Available",
+      "photos": [
+        "/images/IMG_5752.jpg"
+      ],
+      "videos": [],
+      "description": "Ganpati sitting on a fort replica, wearing a traditional Maratha Pheta (turban).",
+      "views": 145,
+      "createdAt": "2026-06-22T00:23:16.373Z"
+    },
+    {
+      "code": "ROY-001",
+      "name": "Peshwa Style Royal Ganpati",
+      "category": "Royal Theme",
+      "size": "4.5 Ft",
+      "price": 24000,
+      "bookingAmount": 1500,
+      "status": "Available",
+      "photos": [
+        "/images/IMG_5753.jpg"
+      ],
+      "videos": [],
+      "description": "Royal court setup with a marble-textured Ganesh Idol resting against custom bolsters.",
+      "views": 180,
+      "createdAt": "2026-06-22T14:16:36.373Z"
+    },
+    {
+      "code": "NAR-001",
+      "name": "Ugra Narasimha Murti",
+      "category": "Narasimha Theme",
+      "size": "3.5 Ft",
+      "price": 19000,
+      "bookingAmount": 1000,
+      "status": "Available",
+      "photos": [
+        "/images/IMG_5754.jpg"
+      ],
+      "videos": [],
+      "description": "Intense and powerful carving of Lord Narasimha emerging from the pillar, painted with high-contrast acrylics.",
+      "views": 95,
+      "createdAt": "2026-06-23T04:09:56.373Z"
+    }
+  ],
+  "bookings": [
+    {
+      "bookingId": "BK-1001",
+      "customerName": "Shashank Poojari",
+      "customerPhone": "9876543210",
+      "customerCity": "Mumbai",
+      "shippingType": "Local Delivery",
+      "shippingDate": "2026-07-03T18:03:16.373Z",
+      "murtiCode": "GAN-002",
+      "amountPaid": 1000,
+      "remainingAmount": 17500,
+      "paymentId": "pay_MOCK123456789",
+      "signature": "sig_MOCK123456789",
+      "status": "Confirmed",
+      "createdAt": "2026-06-19T02:56:36.373Z"
+    },
+    {
+      "bookingId": "BK-1002",
+      "customerName": "Rahul Sharma",
+      "customerPhone": "9123456789",
+      "customerCity": "Pune",
+      "shippingType": "Self Pickup",
+      "shippingDate": "2026-06-28T18:03:16.373Z",
+      "murtiCode": "GAN-003",
+      "amountPaid": 28000,
+      "remainingAmount": 0,
+      "paymentId": "pay_MOCK987654321",
+      "signature": "sig_MOCK987654321",
+      "status": "Completed",
+      "createdAt": "2026-06-20T06:43:16.373Z"
+    }
+  ],
+  "admins": [
+    {
+      "email": "admin@siddhivinayak.com",
+      "password": "$2a$10$vMFx86632EuYF1fvtq3fTOPRrYhDCnpnMuSAdNasafxRRdwzeNvj2",
+      "otpSecret": "",
+      "otpExpires": null
+    }
+  ]
+}
