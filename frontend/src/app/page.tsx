@@ -171,14 +171,14 @@ export default function HomePage() {
                     alt={murti.name} 
                     className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500"
                   />
-                  {/* Status Badge - Blue/Yellow/Red */}
+                  {/* Status Badge */}
                   <div className="absolute top-4 right-4">
                     <span className={`px-4 py-1.5 rounded-full text-xs font-extrabold uppercase tracking-wider ${
                       murti.status === 'Available' ? 'status-available' : 
                       murti.status === 'Reserved' ? 'status-reserved' : 'status-sold'
                     }`}>
-                      {murti.status === 'Available' ? '🔵 Available' : 
-                       murti.status === 'Reserved' ? '🟡 Reserved' : '🔴 Sold Out'}
+                      {murti.status === 'Available' ? 'Available' : 
+                       murti.status === 'Reserved' ? 'Reserved' : 'Sold Out'}
                     </span>
                   </div>
                   {/* Category overlay */}
@@ -216,12 +216,12 @@ export default function HomePage() {
                     <Link 
                       href={`/murti/${murti.code}`} 
                       className={`w-full py-3.5 rounded-full text-center text-xs font-extrabold uppercase tracking-wider transition-all block ${
-                        murti.status === 'Available' 
+                        murti.status === 'Available' && (murti.quantity !== undefined ? murti.quantity : 1) > 0
                           ? 'bg-gradient-to-r from-logo-blue-500 to-logo-blue-600 text-white hover:scale-102 active:scale-98 shadow-md glow-blue' 
                           : 'bg-gray-800 text-gray-500 cursor-not-allowed'
                       }`}
                     >
-                      {murti.status === 'Available' ? '🔵 View & Book' : '🔴 Locked'}
+                      {murti.status === 'Available' && (murti.quantity !== undefined ? murti.quantity : 1) > 0 ? 'Book Murti' : 'Details / Sold Out'}
                     </Link>
                   </div>
                 </div>

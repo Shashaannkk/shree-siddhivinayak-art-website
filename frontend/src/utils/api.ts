@@ -128,6 +128,7 @@ export interface Murti {
   videos: string[];
   description: string;
   views: number;
+  quantity?: number;
 }
 
 export interface Booking {

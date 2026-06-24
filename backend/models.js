@@ -12,6 +12,7 @@ const MurtiSchema = new mongoose.Schema({
     enum: ['Available', 'Reserved', 'Sold', 'Out Of Stock'], 
     default: 'Available' 
   },
+  quantity: { type: Number, default: 1 },
   photos: [{ type: String }],
   videos: [{ type: String }],
   description: { type: String, default: '' },

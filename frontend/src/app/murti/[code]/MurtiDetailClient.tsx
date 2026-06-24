@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { api, Murti } from '@/utils/api';
-import { ArrowLeft, Shield, Truck, Calendar, Sparkles, MessageCircle, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, Shield, Truck, Calendar, Sparkles, MessageCircle, AlertTriangle, Printer, CheckCircle } from 'lucide-react';
 import Link from 'next/link';
 
 export default function MurtiDetailPage() {
@@ -30,6 +30,9 @@ export default function MurtiDetailPage() {
   
   // Booking response
   const [initiatedBooking, setInitiatedBooking] = useState<any>(null);
+  
+  // Confirmed booking receipt
+  const [confirmedBookingReceipt, setConfirmedBookingReceipt] = useState<any>(null);
 
   useEffect(() => {
     async function loadMurti() {
@@ -113,8 +116,23 @@ export default function MurtiDetailPage() {
                 razorpay_signature: response.razorpay_signature
               });
               if (verifyRes.success) {
-                alert(`🎉 Booking confirmed! Booking ID: ${res.bookingId}`);
-                router.push('/collection');
+                const receipt = {
+                  bookingId: res.bookingId,
+                  customerName: name,
+                  customerPhone: phone,
+                  customerCity: city,
+                  shippingType,
+                  shippingDate,
+                  murtiCode: murti.code,
+                  murtiName: murti.name,
+                  murtiSize: murti.size,
+                  price: murti.price,
+                  amountPaid: murti.bookingAmount,
+                  remainingAmount: murti.price - murti.bookingAmount,
+                  date: new Date().toLocaleString('en-IN')
+                };
+                setConfirmedBookingReceipt(receipt);
+                setShowModal(false);
               } else {
                 alert('Payment verification failed.');
               }
@@ -122,7 +140,6 @@ export default function MurtiDetailPage() {
               alert(err.message || 'Payment verification error.');
             } finally {
               setSubmittingBooking(false);
-              setShowModal(false);
             }
           },
           prefill: {
@@ -158,8 +175,23 @@ export default function MurtiDetailPage() {
       });
 
       if (verifyRes.success && success) {
-        alert(`🎉 Booking Confirmed! Booking ID: ${initiatedBooking.bookingId}\nMurti status changed to Reserved.`);
-        router.push('/collection');
+        const receipt = {
+          bookingId: initiatedBooking.bookingId,
+          customerName: name,
+          customerPhone: phone,
+          customerCity: city,
+          shippingType,
+          shippingDate,
+          murtiCode: murti.code,
+          murtiName: murti.name,
+          murtiSize: murti.size,
+          price: murti.price,
+          amountPaid: murti.bookingAmount,
+          remainingAmount: murti.price - murti.bookingAmount,
+          date: new Date().toLocaleString('en-IN')
+        };
+        setConfirmedBookingReceipt(receipt);
+        setShowModal(false);
       } else {
         alert('Payment verification cancelled.');
       }
@@ -167,7 +199,6 @@ export default function MurtiDetailPage() {
       alert(err.message || 'Payment processing error.');
     } finally {
       setSubmittingBooking(false);
-      setShowModal(false);
       setBookingStep(1);
     }
   };
@@ -261,7 +292,7 @@ export default function MurtiDetailPage() {
             </div>
 
             {/* Price Cards & Heights */}
-            <div className="grid grid-cols-2 gap-4 mb-6">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-6">
               <div className="bg-[#1C0102]/60 p-4 rounded-2xl border border-festive-yellow-500/10">
                 <span className="text-xs text-gray-400 block mb-1 font-bold uppercase tracking-wider">Height</span>
                 <span className="text-lg font-bold text-gray-100">{murti.size}</span>
@@ -269,6 +300,12 @@ export default function MurtiDetailPage() {
               <div className="bg-[#1C0102]/60 p-4 rounded-2xl border border-festive-yellow-500/10">
                 <span className="text-xs text-gray-400 block mb-1 font-bold uppercase tracking-wider">Price</span>
                 <span className="text-xl font-black text-festive-yellow-500 font-serif">₹{murti.price.toLocaleString('en-IN')}</span>
+              </div>
+              <div className="bg-[#1C0102]/60 p-4 rounded-2xl border border-festive-yellow-500/10 col-span-2 sm:col-span-1">
+                <span className="text-xs text-gray-400 block mb-1 font-bold uppercase tracking-wider">Available Qty</span>
+                <span className={`text-lg font-extrabold ${(murti.quantity || 0) > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                  {murti.quantity !== undefined ? murti.quantity : 1}
+                </span>
               </div>
             </div>
 
@@ -291,7 +328,7 @@ export default function MurtiDetailPage() {
 
             {/* Buttons Flow */}
             <div className="flex flex-col gap-4">
-              {murti.status === 'Available' ? (
+              {murti.status === 'Available' && (murti.quantity !== undefined ? murti.quantity : 1) > 0 ? (
                 <button
                   onClick={() => setShowModal(true)}
                   className="w-full py-4 rounded-full text-sm font-extrabold uppercase tracking-wider text-black bg-gradient-to-r from-[#FFC107] to-[#FFB300] hover:scale-102 active:scale-98 transition-transform duration-200 shadow-lg shadow-festive-yellow-500/20 text-center cursor-pointer"
@@ -492,6 +529,173 @@ export default function MurtiDetailPage() {
                 </div>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* CONFIRMED BOOKING RECEIPT MODAL */}
+      {confirmedBookingReceipt && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md p-4 overflow-y-auto">
+          <style>{`
+            @media print {
+              body * {
+                visibility: hidden !important;
+              }
+              .print-receipt-modal, .print-receipt-modal * {
+                visibility: visible !important;
+              }
+              .print-receipt-modal {
+                position: absolute !important;
+                left: 0 !important;
+                top: 0 !important;
+                width: 100% !important;
+                background: white !important;
+                color: black !important;
+                box-shadow: none !important;
+                border: none !important;
+                padding: 10px !important;
+                margin: 0 !important;
+              }
+              .no-print {
+                display: none !important;
+              }
+            }
+          `}</style>
+          
+          <div className="print-receipt-modal bg-[#1C0102] border border-festive-yellow-500/20 w-full max-w-2xl rounded-[32px] p-6 sm:p-8 relative text-white shadow-2xl">
+            {/* Header / Brand */}
+            <div className="text-center pb-6 border-b border-festive-yellow-500/20 mb-6">
+              <div className="flex justify-center items-center gap-2.5 mb-2">
+                <img 
+                  src={`${api.basePath || ''}/images/logo-red.png`} 
+                  alt="Logo" 
+                  className="w-12 h-12 object-contain"
+                />
+                <div>
+                  <h2 className="text-xl sm:text-2xl font-serif font-black text-festive-yellow-500 tracking-wide uppercase">Shree Siddhivinayak Arts</h2>
+                  <p className="text-[10px] sm:text-xs text-gray-400 font-bold tracking-widest uppercase">Premium Eco-Friendly Ganpati Murtis</p>
+                </div>
+              </div>
+              <p className="text-xs text-gray-400">Workshop: Pen-Chinchoti Highway, Maharashtra | Contact: +91 98765 43210</p>
+            </div>
+
+            {/* Success Notification - Screen only */}
+            <div className="no-print bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 rounded-2xl p-4 mb-6 flex items-center gap-3">
+              <CheckCircle className="w-6 h-6 shrink-0" />
+              <div>
+                <h4 className="text-sm font-bold">Booking Confirmed Successfully!</h4>
+                <p className="text-xs text-gray-300">Your deposit has been verified. The Murti has been reserved for you.</p>
+              </div>
+            </div>
+
+            {/* Receipt Summary Grid */}
+            <div className="bg-[#2C0001] border border-festive-yellow-500/15 rounded-2xl p-4 sm:p-6 mb-6">
+              <div className="flex justify-between items-center mb-4 pb-2 border-b border-festive-yellow-500/10">
+                <h3 className="text-sm font-serif font-bold text-festive-yellow-500 uppercase tracking-wider">Transaction Invoice</h3>
+                <span className="text-xs font-mono bg-festive-yellow-500/10 text-festive-yellow-500 px-3 py-1 rounded-full border border-festive-yellow-500/20">
+                  ID: {confirmedBookingReceipt.bookingId}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs text-gray-300">
+                {/* Left Column: Buyer Details */}
+                <div className="flex flex-col gap-2.5">
+                  <h4 className="font-extrabold uppercase text-gray-400 tracking-wider">Buyer Identification</h4>
+                  <div>
+                    <span className="text-gray-400 block">Name:</span>
+                    <strong className="text-gray-100 text-sm">{confirmedBookingReceipt.customerName}</strong>
+                  </div>
+                  <div>
+                    <span className="text-gray-400 block">Phone:</span>
+                    <strong className="text-gray-100 text-sm font-mono">{confirmedBookingReceipt.customerPhone}</strong>
+                  </div>
+                  <div>
+                    <span className="text-gray-400 block">City / Address:</span>
+                    <strong className="text-gray-100">{confirmedBookingReceipt.customerCity}</strong>
+                  </div>
+                </div>
+
+                {/* Right Column: Order Details */}
+                <div className="flex flex-col gap-2.5">
+                  <h4 className="font-extrabold uppercase text-gray-400 tracking-wider">Order & Date</h4>
+                  <div>
+                    <span className="text-gray-400 block">Booking Date:</span>
+                    <strong>{confirmedBookingReceipt.date}</strong>
+                  </div>
+                  <div>
+                    <span className="text-gray-400 block">Delivery / Pickup Mode:</span>
+                    <strong className="bg-[#FFC107]/5 border border-festive-yellow-500/25 px-2 py-0.5 rounded text-[10px] text-gray-200 font-bold">
+                      {confirmedBookingReceipt.shippingType}
+                    </strong>
+                  </div>
+                  <div>
+                    <span className="text-gray-400 block">Scheduled Date:</span>
+                    <strong className="font-mono text-festive-yellow-500">
+                      {new Date(confirmedBookingReceipt.shippingDate).toLocaleDateString('en-IN', {
+                        day: '2-digit', month: 'short', year: 'numeric'
+                      })}
+                    </strong>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Itemized Table */}
+            <div className="border border-festive-yellow-500/15 rounded-2xl overflow-hidden mb-6 text-xs">
+              <div className="grid grid-cols-3 bg-[#2C0001] p-3 font-bold border-b border-festive-yellow-500/15 text-gray-400 uppercase tracking-wider">
+                <span>Murti Details</span>
+                <span className="text-center">Height</span>
+                <span className="text-right">Price</span>
+              </div>
+              <div className="grid grid-cols-3 p-3.5 border-b border-festive-yellow-500/10">
+                <div>
+                  <strong className="text-gray-100 block">{confirmedBookingReceipt.murtiName}</strong>
+                  <span className="text-[10px] text-gray-400 font-mono">Code: {confirmedBookingReceipt.murtiCode}</span>
+                </div>
+                <div className="text-center self-center text-gray-300">{confirmedBookingReceipt.murtiSize}</div>
+                <div className="text-right self-center font-bold text-gray-100">₹{confirmedBookingReceipt.price.toLocaleString('en-IN')}</div>
+              </div>
+              <div className="bg-[#2C0001]/40 p-3.5 flex flex-col gap-2">
+                <div className="flex justify-between">
+                  <span className="text-gray-400 font-bold">Total Price</span>
+                  <span className="text-gray-200 font-bold">₹{confirmedBookingReceipt.price.toLocaleString('en-IN')}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-emerald-400 font-bold">Deposit Paid (Advance)</span>
+                  <span className="text-emerald-400 font-bold">₹{confirmedBookingReceipt.amountPaid.toLocaleString('en-IN')}</span>
+                </div>
+                <div className="flex justify-between pt-2 border-t border-festive-yellow-500/10 text-sm font-serif">
+                  <span className="text-festive-yellow-500 font-black uppercase">Balance Due at Pickup</span>
+                  <span className="text-festive-yellow-500 font-black">₹{confirmedBookingReceipt.remainingAmount.toLocaleString('en-IN')}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Terms and conditions */}
+            <div className="text-[10px] text-gray-400 font-light leading-relaxed mb-8 flex flex-col gap-1 border-t border-festive-yellow-500/10 pt-4">
+              <p>• Please display this digital/printed receipt or quote your Booking ID when collecting your Murti.</p>
+              <p>• The booking deposit is non-refundable as it locks the artisan's calendar for this specific design.</p>
+              <p>• Remaining balance must be cleared prior to delivery or at the time of workshop collection.</p>
+            </div>
+
+            {/* Action Buttons - Screen Only */}
+            <div className="no-print flex flex-col sm:flex-row gap-4">
+              <button
+                onClick={() => window.print()}
+                className="w-full sm:w-1/2 py-3 bg-gradient-to-r from-logo-blue-500 to-logo-blue-600 text-white rounded-full font-bold uppercase tracking-wider text-xs hover:scale-102 active:scale-98 transition-transform flex items-center justify-center gap-2 shadow-md glow-blue cursor-pointer"
+              >
+                <Printer className="w-4 h-4" /> Print Booking Receipt
+              </button>
+              <button
+                onClick={() => {
+                  setConfirmedBookingReceipt(null);
+                  router.push('/collection');
+                }}
+                className="w-full sm:w-1/2 py-3 bg-gradient-to-r from-[#FFC107] to-[#FFB300] text-black rounded-full font-black uppercase tracking-wider text-xs hover:scale-102 active:scale-98 transition-transform text-center cursor-pointer"
+              >
+                Continue to Catalog
+              </button>
+            </div>
           </div>
         </div>
       )}

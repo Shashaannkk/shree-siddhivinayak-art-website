@@ -419,7 +419,8 @@ const dataService = {
     if (!murti) {
       throw new Error(`Murti code ${bookingData.murtiCode} not found.`);
     }
-    if (murti.status === 'Sold' || murti.status === 'Out Of Stock') {
+    const currentQty = murti.quantity !== undefined ? murti.quantity : 1;
+    if (currentQty <= 0 || murti.status === 'Sold' || murti.status === 'Out Of Stock') {
       throw new Error(`Murti ${bookingData.murtiCode} is no longer available.`);
     }
 
@@ -478,7 +479,12 @@ const dataService = {
         { new: true }
       );
       if (booking) {
-        await this.updateMurti(booking.murtiCode, { status: 'Reserved' });
+        const murti = await Murti.findOne({ code: booking.murtiCode });
+        if (murti) {
+          const nextQty = Math.max(0, (murti.quantity || 1) - 1);
+          const nextStatus = nextQty === 0 ? 'Sold' : 'Available';
+          await Murti.findOneAndUpdate({ code: booking.murtiCode }, { $set: { quantity: nextQty, status: nextStatus } });
+        }
       }
       return booking;
     } else {
@@ -493,7 +499,10 @@ const dataService = {
       const mCode = data.bookings[bIndex].murtiCode;
       const mIndex = data.murtis.findIndex(m => m.code === mCode);
       if (mIndex !== -1) {
-        data.murtis[mIndex].status = 'Reserved';
+        const currentQty = data.murtis[mIndex].quantity !== undefined ? data.murtis[mIndex].quantity : 1;
+        const nextQty = Math.max(0, currentQty - 1);
+        data.murtis[mIndex].quantity = nextQty;
+        data.murtis[mIndex].status = nextQty === 0 ? 'Sold' : 'Available';
       }
 
       writeJSONFile(data);
@@ -508,12 +517,19 @@ const dataService = {
         { $set: { status } },
         { new: true }
       );
-      // If booking cancelled, release Murti back to Available
-      if (booking && status === 'Cancelled') {
-        await this.updateMurti(booking.murtiCode, { status: 'Available' });
-      } else if (booking && status === 'Completed') {
-        // Completed booking implies pickup and fully paid, mark murti as Sold
-        await this.updateMurti(booking.murtiCode, { status: 'Sold' });
+      if (booking) {
+        if (status === 'Cancelled') {
+          const murti = await Murti.findOne({ code: booking.murtiCode });
+          if (murti) {
+            const nextQty = (murti.quantity || 0) + 1;
+            await Murti.findOneAndUpdate({ code: booking.murtiCode }, { $set: { quantity: nextQty, status: 'Available' } });
+          }
+        } else if (status === 'Completed') {
+          const murti = await Murti.findOne({ code: booking.murtiCode });
+          if (murti && (murti.quantity || 0) === 0) {
+            await Murti.findOneAndUpdate({ code: booking.murtiCode }, { $set: { status: 'Sold' } });
+          }
+        }
       }
       return booking;
     } else {
@@ -527,11 +543,14 @@ const dataService = {
       const mIndex = data.murtis.findIndex(m => m.code === mCode);
       if (mIndex !== -1) {
         if (status === 'Cancelled') {
+          const currentQty = data.murtis[mIndex].quantity !== undefined ? data.murtis[mIndex].quantity : 0;
+          data.murtis[mIndex].quantity = currentQty + 1;
           data.murtis[mIndex].status = 'Available';
         } else if (status === 'Completed') {
-          data.murtis[mIndex].status = 'Sold';
-        } else if (status === 'Confirmed') {
-          data.murtis[mIndex].status = 'Reserved';
+          const currentQty = data.murtis[mIndex].quantity !== undefined ? data.murtis[mIndex].quantity : 0;
+          if (currentQty === 0) {
+            data.murtis[mIndex].status = 'Sold';
+          }
         }
       }
       writeJSONFile(data);

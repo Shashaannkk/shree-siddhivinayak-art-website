@@ -288,13 +288,19 @@ function CollectionContent() {
                     </div>
 
                     <div className="border-t border-festive-yellow-500/10 pt-4 mt-auto">
-                      <div className="flex justify-between items-center mb-4">
+                      <div className="flex justify-between items-center mb-4 text-xs">
                         <div>
-                          <span className="text-xs text-gray-400 block font-bold uppercase tracking-wider">Price</span>
-                          <span className="text-xl font-black text-festive-yellow-500 font-serif">₹{murti.price.toLocaleString('en-IN')}</span>
+                          <span className="text-[10px] text-gray-400 block font-bold uppercase tracking-wider">Price</span>
+                          <span className="text-base font-black text-festive-yellow-500 font-serif">₹{murti.price.toLocaleString('en-IN')}</span>
+                        </div>
+                        <div className="text-center">
+                          <span className="text-[10px] text-gray-400 block font-bold uppercase tracking-wider">Stock</span>
+                          <span className={`font-bold ${(murti.quantity || 0) > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                            {murti.quantity !== undefined ? `${murti.quantity} Left` : '1 Left'}
+                          </span>
                         </div>
                         <div className="text-right">
-                          <span className="text-xs text-gray-400 block font-bold uppercase tracking-wider">Height</span>
+                          <span className="text-[10px] text-gray-400 block font-bold uppercase tracking-wider">Height</span>
                           <span className="text-sm font-bold text-gray-100">{murti.size}</span>
                         </div>
                       </div>
@@ -302,12 +308,12 @@ function CollectionContent() {
                       <Link 
                         href={`/murti/${murti.code}`} 
                         className={`w-full py-3 rounded-full text-center text-xs font-bold uppercase tracking-wider transition-all block ${
-                          murti.status === 'Available' 
+                          murti.status === 'Available' && (murti.quantity !== undefined ? murti.quantity : 1) > 0
                             ? 'bg-gradient-to-r from-logo-blue-500 to-logo-blue-600 text-white hover:scale-102 active:scale-98 shadow-md' 
                             : 'bg-gray-800 text-gray-500 cursor-not-allowed'
                         }`}
                       >
-                        {murti.status === 'Available' ? '🔵 Book This Murti' : 'Details & Booking'}
+                        {murti.status === 'Available' && (murti.quantity !== undefined ? murti.quantity : 1) > 0 ? '🔵 Book This Murti' : 'Details / Sold Out'}
                       </Link>
                     </div>
                   </div>
@@ -362,9 +368,9 @@ function CollectionContent() {
                 <div className="flex flex-wrap gap-2">
                   {[
                     { label: 'All', val: '' },
-                    { label: '🟢 Available', val: 'Available' },
-                    { label: '🟡 Reserved', val: 'Reserved' },
-                    { label: '🔴 Sold Out', val: 'Sold' }
+                    { label: 'Available', val: 'Available' },
+                    { label: 'Reserved', val: 'Reserved' },
+                    { label: 'Sold Out', val: 'Sold' }
                   ].map((s) => (
                     <button
                       key={s.val}

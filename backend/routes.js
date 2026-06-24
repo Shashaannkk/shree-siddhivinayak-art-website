@@ -219,7 +219,7 @@ router.post('/admin/murtis', authenticateAdmin, upload.fields([
   { name: 'videos', maxCount: 2 }
 ]), async (req, res) => {
   try {
-    const { name, category, size, price, bookingAmount, description, code } = req.body;
+    const { name, category, size, price, bookingAmount, description, code, quantity } = req.body;
 
     if (!name || !category || !size || !price) {
       return res.status(400).json({ error: 'Name, Category, Size, and Price are required.' });
@@ -262,6 +262,7 @@ router.post('/admin/murtis', authenticateAdmin, upload.fields([
       size,
       price: Number(price),
       bookingAmount: bookingAmount ? Number(bookingAmount) : 1000,
+      quantity: quantity ? Number(quantity) : 1,
       description: description || '',
       code: code || undefined,
       photos: photoPaths,

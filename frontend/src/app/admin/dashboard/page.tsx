@@ -29,6 +29,7 @@ export default function AdminDashboardPage() {
   const [size, setSize] = useState('3.5 Ft');
   const [price, setPrice] = useState('');
   const [bookingAmount, setBookingAmount] = useState('1000');
+  const [quantity, setQuantity] = useState('1');
   const [description, setDescription] = useState('');
   const [photos, setPhotos] = useState<FileList | null>(null);
   const [videos, setVideos] = useState<FileList | null>(null);
@@ -138,6 +139,7 @@ export default function AdminDashboardPage() {
       formData.append('size', size);
       formData.append('price', price);
       formData.append('bookingAmount', bookingAmount);
+      formData.append('quantity', quantity);
       formData.append('description', description);
 
       if (photos) {
@@ -157,6 +159,7 @@ export default function AdminDashboardPage() {
       setName('');
       setPrice('');
       setBookingAmount('1000');
+      setQuantity('1');
       setDescription('');
       setPhotos(null);
       setVideos(null);
@@ -206,7 +209,7 @@ export default function AdminDashboardPage() {
       </div>
 
       {/* Tabs list */}
-      <div className="flex gap-4 border-b border-festive-yellow-500/15 mb-8 pb-px">
+      <div className="flex gap-4 border-b border-festive-yellow-500/15 mb-8 pb-2 overflow-x-auto whitespace-nowrap scrollbar-none">
         {[
           { id: 'analytics', label: '📊 Analytics Overview' },
           { id: 'inventory', label: '🗂️ Murti Catalog' },
@@ -376,6 +379,7 @@ export default function AdminDashboardPage() {
                   <th className="p-4">Category</th>
                   <th className="p-4">Height</th>
                   <th className="p-4">Price</th>
+                  <th className="p-4">Qty</th>
                   <th className="p-4">Views</th>
                   <th className="p-4">Status</th>
                   <th className="p-4 text-center">Actions</th>
@@ -389,6 +393,7 @@ export default function AdminDashboardPage() {
                     <td className="p-4 text-xs text-gray-300">{m.category}</td>
                     <td className="p-4 text-xs">{m.size}</td>
                     <td className="p-4 font-black font-serif text-[#FFC107]">₹{m.price.toLocaleString('en-IN')}</td>
+                    <td className="p-4 text-xs font-mono">{m.quantity !== undefined ? m.quantity : 1}</td>
                     <td className="p-4 text-xs font-mono">{m.views}</td>
                     <td className="p-4">
                       <select
@@ -525,7 +530,7 @@ export default function AdminDashboardPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div>
                   <label className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-2">Height / Size</label>
                   <select
@@ -561,6 +566,18 @@ export default function AdminDashboardPage() {
                     value={bookingAmount}
                     onChange={(e) => setBookingAmount(e.target.value)}
                     className="w-full px-4 py-3 bg-[#1C0102] border border-festive-yellow-500/20 focus:border-festive-yellow-500/50 rounded-xl outline-none text-white"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-2">Qty Available</label>
+                  <input
+                    type="number"
+                    required
+                    min="1"
+                    placeholder="1"
+                    value={quantity}
+                    onChange={(e) => setQuantity(e.target.value)}
+                    className="w-full px-4 py-3 bg-[#1C0102] border border-festive-yellow-500/20 focus:border-festive-yellow-500/50 rounded-xl outline-none text-white font-bold"
                   />
                 </div>
               </div>
