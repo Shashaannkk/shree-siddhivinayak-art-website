@@ -6,6 +6,7 @@ const nextConfig: NextConfig = {
     unoptimized: true, // Required for static exports
   },
   basePath: process.env.NEXT_PUBLIC_BASE_PATH || "/shree-siddhivinayak-art-website",
+  trailingSlash: true,
 };
 
 export default nextConfig;
