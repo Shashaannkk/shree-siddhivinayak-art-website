@@ -99,6 +99,16 @@ export default function AdminDashboardPage() {
           alert(`Murti ${code} deleted.`);
         }
       } catch {
+        const stored = localStorage.getItem('siddhivinayak_murtis');
+        if (stored) {
+          try {
+            const list = JSON.parse(stored);
+            const filtered = list.filter((m: any) => m.code !== code);
+            localStorage.setItem('siddhivinayak_murtis', JSON.stringify(filtered));
+          } catch (e) {
+            console.error(e);
+          }
+        }
         alert(`Deleted Murti ${code} (Local mock simulation).`);
       }
       await loadDashboardData(token || '');

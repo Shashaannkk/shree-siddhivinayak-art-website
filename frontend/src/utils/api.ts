@@ -1,5 +1,5 @@
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:5000/api';
-const basePath = process.env.NEXT_PUBLIC_BASE_PATH || '';
+const basePath = process.env.NEXT_PUBLIC_BASE_PATH || '/shree-siddhivinayak-art-website';
 
 // Helper to get Auth Headers
 const authHeaders = (token?: string): Record<string, string> => {
@@ -146,6 +146,78 @@ export interface Booking {
   createdAt: string;
 }
 
+// Helper to get/set offline dataset
+const getOfflineMurtis = (): Murti[] => {
+  if (typeof window === 'undefined') return clientFallbackMurtis as Murti[];
+  const stored = localStorage.getItem('siddhivinayak_murtis');
+  if (stored) {
+    try {
+      return JSON.parse(stored);
+    } catch {
+      // ignore
+    }
+  }
+  // Initialize with fallback
+  localStorage.setItem('siddhivinayak_murtis', JSON.stringify(clientFallbackMurtis));
+  return clientFallbackMurtis as Murti[];
+};
+
+const saveOfflineMurtis = (murtis: Murti[]) => {
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('siddhivinayak_murtis', JSON.stringify(murtis));
+  }
+};
+
+const getOfflineBookings = (): Booking[] => {
+  if (typeof window === 'undefined') return [];
+  const stored = localStorage.getItem('siddhivinayak_bookings');
+  if (stored) {
+    try {
+      return JSON.parse(stored);
+    } catch {
+      // ignore
+    }
+  }
+  const defaultBookings = [
+    {
+      bookingId: 'BK-1001',
+      customerName: 'Shashank Poojari',
+      customerPhone: '9876543210',
+      customerCity: 'Mumbai',
+      shippingType: 'Transport Booking',
+      shippingDate: new Date(Date.now() + 864000000).toISOString(),
+      murtiCode: 'GAN-002',
+      amountPaid: 1000,
+      remainingAmount: 17500,
+      paymentId: 'pay_MOCK123456789',
+      status: 'Confirmed',
+      createdAt: new Date().toISOString()
+    },
+    {
+      bookingId: 'BK-1002',
+      customerName: 'Rahul Sharma',
+      customerPhone: '9123456789',
+      customerCity: 'Pune',
+      shippingType: 'Self Pickup',
+      shippingDate: new Date(Date.now() + 432000000).toISOString(),
+      murtiCode: 'GAN-003',
+      amountPaid: 28000,
+      remainingAmount: 0,
+      paymentId: 'pay_MOCK987654321',
+      status: 'Completed',
+      createdAt: new Date(Date.now() - 30000000).toISOString()
+    }
+  ] as Booking[];
+  localStorage.setItem('siddhivinayak_bookings', JSON.stringify(defaultBookings));
+  return defaultBookings;
+};
+
+const saveOfflineBookings = (bookings: Booking[]) => {
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('siddhivinayak_bookings', JSON.stringify(bookings));
+  }
+};
+
 function adjustMurtiPaths(murti: any): Murti {
   if (!basePath) return murti;
   return {
@@ -178,7 +250,7 @@ export const api = {
       return data.map(adjustMurtiPaths);
     } catch (e) {
       console.warn('Backend server offline. Serving client fallbacks.');
-      let filtered = [...clientFallbackMurtis];
+      let filtered = getOfflineMurtis();
       if (filters.category) filtered = filtered.filter(m => m.category === filters.category);
       if (filters.status) filtered = filtered.filter(m => m.status === filters.status);
       if (filters.search) {
@@ -197,7 +269,7 @@ export const api = {
       const data = await res.json();
       return adjustMurtiPaths(data);
     } catch {
-      const found = clientFallbackMurtis.find(m => m.code === code);
+      const found = getOfflineMurtis().find(m => m.code === code);
       return found ? adjustMurtiPaths(found as Murti) : null;
     }
   },
@@ -223,17 +295,36 @@ export const api = {
       }
       return await res.json();
     } catch (e: any) {
-      // Simulate client side checkout
       console.warn('Backend server offline. Simulating booking response.');
-      const localMurtis = typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('murtis') || '[]') : [];
-      const m = localMurtis.find((m: any) => m.code === bookingData.murtiCode) || clientFallbackMurtis.find(m => m.code === bookingData.murtiCode);
+      const list = getOfflineMurtis();
+      const m = list.find((m: any) => m.code === bookingData.murtiCode);
       if (!m) throw new Error('Murti not found');
-      if (m.status !== 'Available') throw new Error('Murti is already booked');
+      const qty = m.quantity !== undefined ? m.quantity : 1;
+      if (qty <= 0 || m.status !== 'Available') throw new Error('Murti is already booked');
+
+      const newBooking: Booking = {
+        bookingId: `BK-MOCK-${Math.floor(1000 + Math.random() * 9000)}`,
+        customerName: bookingData.customerName,
+        customerPhone: bookingData.customerPhone,
+        customerCity: bookingData.customerCity,
+        shippingType: bookingData.shippingType as any,
+        shippingDate: bookingData.shippingDate,
+        murtiCode: bookingData.murtiCode,
+        amountPaid: m.bookingAmount,
+        remainingAmount: m.price - m.bookingAmount,
+        paymentId: 'pay_MOCK' + Date.now(),
+        status: 'Pending',
+        createdAt: new Date().toISOString()
+      };
+      
+      const bookings = getOfflineBookings();
+      bookings.push(newBooking);
+      saveOfflineBookings(bookings);
 
       return {
         success: true,
         useMock: true,
-        bookingId: `BK-MOCK-${Math.floor(1000 + Math.random() * 9000)}`,
+        bookingId: newBooking.bookingId,
         amount: m.bookingAmount,
         murti: m
       };
@@ -262,19 +353,34 @@ export const api = {
     } catch (e: any) {
       console.warn('Backend server offline. Confirming simulated booking locally.');
       if (verificationData.simulatedSuccess) {
-        // Save local confirmation of reservation in localStorage so it persists in visual fallback
-        if (typeof window !== 'undefined') {
-          const bookedMurtiCode = verificationData.bookingId.split('-').pop() || ''; // fallback parsing if code passed or stored
-          // Find the active booking details if needed
-        }
-        return {
-          success: true,
-          message: 'Local simulation payment verified.',
-          booking: {
-            bookingId: verificationData.bookingId,
-            status: 'Confirmed'
+        const bookings = getOfflineBookings();
+        const bIdx = bookings.findIndex(b => b.bookingId === verificationData.bookingId);
+        if (bIdx !== -1) {
+          bookings[bIdx].status = 'Confirmed';
+          saveOfflineBookings(bookings);
+          
+          // Decrement Murti quantity
+          const mList = getOfflineMurtis();
+          const mIdx = mList.findIndex(m => m.code === bookings[bIdx].murtiCode);
+          if (mIdx !== -1) {
+            const nextQty = Math.max(0, (mList[mIdx].quantity || 1) - 1);
+            mList[mIdx].quantity = nextQty;
+            mList[mIdx].status = nextQty === 0 ? 'Sold' : 'Available';
+            saveOfflineMurtis(mList);
           }
-        };
+          return {
+            success: true,
+            message: 'Local simulation payment verified.',
+            booking: bookings[bIdx]
+          };
+        }
+      } else {
+        const bookings = getOfflineBookings();
+        const bIdx = bookings.findIndex(b => b.bookingId === verificationData.bookingId);
+        if (bIdx !== -1) {
+          bookings[bIdx].status = 'Cancelled';
+          saveOfflineBookings(bookings);
+        }
       }
       throw new Error('Simulation payment rejected.');
     }
@@ -344,37 +450,7 @@ export const api = {
       if (!res.ok) throw new Error('API Error');
       return await res.json();
     } catch {
-      // Return local fallback list
-      return [
-        {
-          bookingId: 'BK-1001',
-          customerName: 'Shashank Poojari',
-          customerPhone: '9876543210',
-          customerCity: 'Mumbai',
-          shippingType: 'Local Delivery',
-          shippingDate: new Date(Date.now() + 864000000).toISOString(),
-          murtiCode: 'GAN-002',
-          amountPaid: 1000,
-          remainingAmount: 17500,
-          paymentId: 'pay_MOCK123456789',
-          status: 'Confirmed',
-          createdAt: new Date().toISOString()
-        },
-        {
-          bookingId: 'BK-1002',
-          customerName: 'Rahul Sharma',
-          customerPhone: '9123456789',
-          customerCity: 'Pune',
-          shippingType: 'Self Pickup',
-          shippingDate: new Date(Date.now() + 432000000).toISOString(),
-          murtiCode: 'GAN-003',
-          amountPaid: 28000,
-          remainingAmount: 0,
-          paymentId: 'pay_MOCK987654321',
-          status: 'Completed',
-          createdAt: new Date(Date.now() - 30000000).toISOString()
-        }
-      ] as Booking[];
+      return getOfflineBookings();
     }
   },
 
@@ -450,21 +526,30 @@ export const api = {
       return await res.json();
     } catch (e: any) {
       console.warn('Backend server offline. Simulating local Murti add.');
+      const newCode = (formData.get('code') as string) || `GAN-${Math.floor(100 + Math.random() * 900)}`;
+      const newMurti: Murti = {
+        code: newCode,
+        name: formData.get('name') as string,
+        category: formData.get('category') as string,
+        size: formData.get('size') as string,
+        price: Number(formData.get('price')),
+        bookingAmount: Number(formData.get('bookingAmount') || 1000),
+        quantity: Number(formData.get('quantity') || 1),
+        description: (formData.get('description') as string) || '',
+        photos: ['https://images.unsplash.com/photo-1609252509102-ee7026b2161f?w=800&auto=format&fit=crop'],
+        videos: [],
+        status: 'Available',
+        views: 0
+      };
+      
+      const current = getOfflineMurtis();
+      const filtered = current.filter(m => m.code !== newMurti.code);
+      filtered.push(newMurti);
+      saveOfflineMurtis(filtered);
+
       return {
         message: 'Murti created locally (Mock).',
-        murti: {
-          code: formData.get('code') || `GAN-MOCK-${Math.floor(100 + Math.random() * 900)}`,
-          name: formData.get('name'),
-          category: formData.get('category'),
-          size: formData.get('size'),
-          price: Number(formData.get('price')),
-          bookingAmount: Number(formData.get('bookingAmount') || 1000),
-          description: formData.get('description'),
-          photos: ['https://images.unsplash.com/photo-1609252509102-ee7026b2161f?w=800&auto=format&fit=crop'],
-          videos: [],
-          status: 'Available',
-          views: 0
-        }
+        murti: newMurti
       };
     }
   },

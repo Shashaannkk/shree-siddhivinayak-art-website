@@ -25,7 +25,7 @@ export default function MurtiDetailPage() {
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [city, setCity] = useState('');
-  const [shippingType, setShippingType] = useState<'Self Pickup' | 'Local Delivery' | 'Transport Booking'>('Self Pickup');
+  const [shippingType, setShippingType] = useState<'Self Pickup' | 'Transport Booking'>('Self Pickup');
   const [shippingDate, setShippingDate] = useState('');
   
   // Booking response
@@ -50,6 +50,18 @@ export default function MurtiDetailPage() {
       loadMurti();
     }
   }, [code]);
+
+  // Lock body scroll when modal or receipt is open
+  useEffect(() => {
+    if (showModal || confirmedBookingReceipt) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [showModal, confirmedBookingReceipt]);
 
   if (loading) {
     return (
@@ -369,7 +381,7 @@ export default function MurtiDetailPage() {
       {/* BOOKING FLOW MODAL */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md p-4">
-          <div className="blinkit-card w-full max-w-xl rounded-[32px] p-8 border border-festive-yellow-500/20 relative animate-in fade-in zoom-in duration-200">
+          <div className="blinkit-card w-full max-w-xl rounded-[32px] p-6 sm:p-8 border border-festive-yellow-500/20 relative animate-in fade-in zoom-in duration-200 max-h-[90vh] overflow-y-auto">
             
             {/* Header */}
             <div className="flex justify-between items-start border-b border-festive-yellow-500/15 pb-4 mb-6">
@@ -429,10 +441,9 @@ export default function MurtiDetailPage() {
                 {/* Pickup / Shipping Options */}
                 <div>
                   <label className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-2">Pickup / Delivery Mode</label>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {[
                       { type: 'Self Pickup', desc: 'Workshop collection' },
-                      { type: 'Local Delivery', desc: 'Home transport' },
                       { type: 'Transport Booking', desc: 'Transit agency booking' }
                     ].map((mode) => (
                       <label 
