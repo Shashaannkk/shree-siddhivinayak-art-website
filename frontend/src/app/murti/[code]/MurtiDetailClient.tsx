@@ -190,14 +190,22 @@ export default function MurtiDetailPage() {
               style={{ transform: `rotateY(${rotationAngle}deg) scale(1.05)` }}
               className="object-contain w-full h-full transition-transform duration-100 ease-out"
             />
+            {/* Watermark Logo */}
+            <div className="absolute top-4 left-4 z-10 opacity-70 pointer-events-none">
+              <img 
+                src={`${api.basePath || ''}/images/logo-white.png`} 
+                alt="Watermark Logo" 
+                className="w-16 h-16 object-contain"
+              />
+            </div>
             {/* Status Overlays */}
             <div className="absolute top-4 right-4 z-10">
               <span className={`px-4 py-2 rounded-full text-xs font-extrabold uppercase tracking-wider ${
                 murti.status === 'Available' ? 'status-available shadow-md' : 
                 murti.status === 'Reserved' ? 'status-reserved shadow-md' : 'status-sold shadow-md'
               }`}>
-                {murti.status === 'Available' ? '🟢 Available' : 
-                 murti.status === 'Reserved' ? '🟡 Reserved' : '🔴 Sold Out'}
+                {murti.status === 'Available' ? 'Available' : 
+                 murti.status === 'Reserved' ? 'Reserved' : 'Sold Out'}
               </span>
             </div>
             
@@ -288,11 +296,11 @@ export default function MurtiDetailPage() {
                   onClick={() => setShowModal(true)}
                   className="w-full py-4 rounded-full text-sm font-extrabold uppercase tracking-wider text-black bg-gradient-to-r from-[#FFC107] to-[#FFB300] hover:scale-102 active:scale-98 transition-transform duration-200 shadow-lg shadow-festive-yellow-500/20 text-center cursor-pointer"
                 >
-                  🟢 Book This Murti (Pay ₹{murti.bookingAmount})
+                  Book This Murti (Pay ₹{murti.bookingAmount})
                 </button>
               ) : (
                 <div className="w-full py-4 bg-gray-800 border border-gray-700/50 rounded-full text-center text-sm font-bold text-gray-500 uppercase tracking-wider cursor-not-allowed">
-                  {murti.status === 'Reserved' ? '🟡 Reserved' : '🔴 Sold Out'}
+                  {murti.status === 'Reserved' ? 'Reserved' : 'Sold Out'}
                 </div>
               )}
 

@@ -152,20 +152,20 @@ function CollectionContent() {
           {/* Status Filter */}
           <div className="mb-6 border-t border-festive-yellow-500/10 pt-4">
             <label className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-3">Availability</label>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-col gap-1.5">
               {[
-                { label: 'All', val: '' },
-                { label: '🟢 Available', val: 'Available' },
-                { label: '🟡 Reserved', val: 'Reserved' },
-                { label: '🔴 Sold Out', val: 'Sold' }
+                { label: 'All States', val: '' },
+                { label: 'Available', val: 'Available' },
+                { label: 'Reserved', val: 'Reserved' },
+                { label: 'Sold Out', val: 'Sold' }
               ].map((s) => (
                 <button
                   key={s.val}
                   onClick={() => setStatus(s.val)}
-                  className={`text-xs px-3 py-2 rounded-full border transition-all ${
+                  className={`text-left text-sm px-3.5 py-2 rounded-xl transition-all ${
                     status === s.val 
-                      ? 'border-festive-yellow-500 bg-[#FFC107]/10 text-festive-yellow-500 font-bold' 
-                      : 'border-festive-yellow-500/20 bg-transparent text-gray-300 hover:border-festive-yellow-500/40'
+                      ? 'bg-[#FFC107]/10 text-festive-yellow-500 font-bold border-l-4 border-festive-yellow-500' 
+                      : 'text-gray-300 hover:text-white hover:bg-red-950/40'
                   }`}
                 >
                   {s.label}
@@ -247,14 +247,23 @@ function CollectionContent() {
                       className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500"
                     />
                     
+                    {/* Card Watermark Logo */}
+                    <div className="absolute top-4 left-4 z-10 opacity-60 pointer-events-none">
+                      <img 
+                        src={`${api.basePath || ''}/images/logo-white.png`} 
+                        alt="" 
+                        className="w-10 h-10 object-contain"
+                      />
+                    </div>
+
                     {/* Status Badge */}
                     <div className="absolute top-4 right-4">
                       <span className={`px-3 py-1.5 rounded-full text-xs font-extrabold uppercase tracking-wider ${
                         murti.status === 'Available' ? 'status-available' : 
                         murti.status === 'Reserved' ? 'status-reserved' : 'status-sold'
                       }`}>
-                        {murti.status === 'Available' ? '🔵 Available' : 
-                         murti.status === 'Reserved' ? '🟡 Reserved' : '🔴 Sold Out'}
+                        {murti.status === 'Available' ? 'Available' : 
+                         murti.status === 'Reserved' ? 'Reserved' : 'Sold Out'}
                       </span>
                     </div>
 

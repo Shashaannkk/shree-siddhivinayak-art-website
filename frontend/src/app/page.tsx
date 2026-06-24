@@ -92,7 +92,7 @@ export default function HomePage() {
           <div className="absolute inset-0 bg-gradient-to-r from-logo-blue-500/10 via-festive-yellow-500/10 to-festive-red-500/10 opacity-70 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none rounded-[32px]" />
           
           <video 
-            src={`${api.basePath || ''}/videos/0705(1).mp4`} 
+            src={`${api.basePath || ''}/videos/hero-video.mp4`} 
             controls 
             autoPlay 
             loop 

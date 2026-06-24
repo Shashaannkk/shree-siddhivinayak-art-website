@@ -27,18 +27,21 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const basePath = process.env.NEXT_PUBLIC_BASE_PATH || '';
   return (
     <html lang="en" className={`${cinzel.variable} ${outfit.variable}`}>
       <body className="antialiased min-h-screen bg-[#1C0102] text-[#FFF9F5]">
         {/* Navigation Bar - Apple Style Rounded Glassmorphism */}
         <header className="sticky top-4 z-50 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="w-full border border-festive-yellow-500/20 bg-[#2C0001]/90 backdrop-blur-lg h-20 rounded-full px-6 flex items-center justify-between shadow-[0_10px_30px_rgba(0,0,0,0.6)]">
-            <Link href="/" className="flex items-center gap-3 group">
-              <span className="text-xl sm:text-2xl font-black tracking-wider font-serif group-hover:scale-102 transition-transform flex items-center gap-2">
-                <span className="w-8 h-8 rounded-full bg-[#0088FF] flex items-center justify-center text-sm font-bold text-white shadow-md border border-[#FFC107]/30">
-                  श्री
-                </span>
-                <span className="text-gold-gradient">SIDDHIVINAYAK ARTS</span>
+            <Link href="/" className="flex items-center gap-2.5 group">
+              <img 
+                src={`${basePath}/images/logo-red.png`} 
+                alt="Shree Siddhivinayak Arts Logo" 
+                className="w-12 h-12 object-contain rounded-full border border-festive-yellow-500/20 bg-red-950/60 shadow-md group-hover:scale-105 transition-transform"
+              />
+              <span className="text-xl sm:text-2xl font-black tracking-wider font-serif group-hover:scale-102 transition-transform text-gold-gradient">
+                SIDDHIVINAYAK ARTS
               </span>
             </Link>
             
@@ -69,10 +72,12 @@ export default function RootLayout({
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom,rgba(255,193,7,0.04),transparent_70%)] pointer-events-none" />
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-8 relative z-10">
             <div className="text-center md:text-left">
-              <h3 className="text-lg font-serif font-black text-gold-gradient tracking-wider flex items-center gap-2 justify-center md:justify-start">
-                <span className="w-6 h-6 rounded-full bg-[#0088FF] flex items-center justify-center text-[10px] font-bold text-white border border-[#FFC107]/20">
-                  श्री
-                </span>
+              <h3 className="text-lg font-serif font-black text-gold-gradient tracking-wider flex items-center gap-2.5 justify-center md:justify-start">
+                <img 
+                  src={`${basePath}/images/logo-red.png`} 
+                  alt="" 
+                  className="w-8 h-8 object-contain rounded-full border border-festive-yellow-500/15"
+                />
                 SHREE SIDDHIVINAYAK ARTS
               </h3>
               <p className="text-xs text-gray-500 mt-2">Premium Handcrafted Murtis. Endless Creation...</p>
