@@ -165,8 +165,8 @@
     {
       "email": "admin@siddhivinayak.com",
       "password": "$2a$10$vMFx86632EuYF1fvtq3fTOPRrYhDCnpnMuSAdNasafxRRdwzeNvj2",
-      "otpSecret": "",
-      "otpExpires": null
+      "otpSecret": "592628",
+      "otpExpires": "2026-06-23T18:59:26.603Z"
     }
   ]
 }

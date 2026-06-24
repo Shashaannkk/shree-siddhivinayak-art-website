@@ -1,0 +1,171 @@
+@import "tailwindcss";
+
+@theme {
+  /* Festive Red Palette (Primary) */
+  --color-festive-red-50: #FFF5F5;
+  --color-festive-red-100: #FFE3E3;
+  --color-festive-red-500: #E31E24;
+  --color-festive-red-600: #C21318;
+  --color-festive-red-700: #9E0B10;
+  --color-festive-red-800: #7A050A;
+  --color-festive-red-900: #4A0002;
+  --color-festive-red-950: #2C0001;
+
+  /* Devotional Yellow/Gold Palette */
+  --color-festive-yellow-50: #FFFDF0;
+  --color-festive-yellow-100: #FFF9C4;
+  --color-festive-yellow-400: #FFD54F;
+  --color-festive-yellow-500: #FFC107; /* Festive Gold */
+  --color-festive-yellow-600: #FFB300;
+  --color-festive-yellow-700: #F57F17;
+
+  /* Logo Blue Palette (Interactions) */
+  --color-logo-blue-50: #E3F2FD;
+  --color-logo-blue-100: #BBDEFB;
+  --color-logo-blue-500: #0088FF; /* Logo Blue */
+  --color-logo-blue-600: #0077E6;
+  --color-logo-blue-700: #0066CC;
+  --color-logo-blue-800: #004C99;
+}
+
+:root {
+  --font-serif: 'Cinzel', serif;
+  --font-sans: 'Outfit', sans-serif;
+  
+  /* Deep crimson rich dark background (Apple-style dark mode for Ganesha) */
+  --background: #1C0102;
+  --foreground: #FFF9F5;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  overflow-x: hidden;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #1C0102;
+}
+::-webkit-scrollbar-thumb {
+  background: #4A0002;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 193, 7, 0.2);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #7A050A;
+}
+
+/* Rounded Apple & Blinkit UI Cards */
+.blinkit-card {
+  background: rgba(44, 0, 1, 0.75);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1.5px solid rgba(255, 193, 7, 0.15);
+  border-radius: 28px; /* High rounding */
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.blinkit-card:hover {
+  border-color: rgba(255, 193, 7, 0.4);
+  box-shadow: 0 20px 48px rgba(255, 193, 7, 0.08);
+  transform: scale(1.02);
+}
+
+/* Buttons (Vibrant, heavily rounded) */
+.btn-pill-blue {
+  background: linear-gradient(135deg, #0088FF 0%, #0066CC 100%);
+  color: white;
+  border-radius: 9999px;
+  box-shadow: 0 4px 15px rgba(0, 136, 255, 0.3);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.btn-pill-blue:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 136, 255, 0.5);
+}
+
+.btn-pill-yellow {
+  background: linear-gradient(135deg, #FFC107 0%, #FFB300 100%);
+  color: #1C0102;
+  border-radius: 9999px;
+  box-shadow: 0 4px 15px rgba(255, 193, 7, 0.3);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.btn-pill-yellow:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(255, 193, 7, 0.5);
+}
+
+.btn-pill-red {
+  background: linear-gradient(135deg, #E31E24 0%, #9E0B10 100%);
+  color: white;
+  border-radius: 9999px;
+  box-shadow: 0 4px 15px rgba(227, 30, 36, 0.3);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.btn-pill-red:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(227, 30, 36, 0.5);
+}
+
+/* Gradients */
+.bg-festive-red-gradient {
+  background: linear-gradient(180deg, #2C0001 0%, #1C0102 100%);
+}
+
+.bg-festive-yellow-gradient {
+  background: linear-gradient(135deg, #FFD54F 0%, #FFB300 100%);
+}
+
+.text-gold-gradient {
+  background: linear-gradient(135deg, #FFF9C4 0%, #FFC107 50%, #FFB300 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.text-blue-gradient {
+  background: linear-gradient(135deg, #E3F2FD 0%, #0088FF 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Status Badges */
+.status-available {
+  background: rgba(0, 136, 255, 0.1);
+  color: #3399FF;
+  border: 1px solid rgba(0, 136, 255, 0.25);
+}
+
+.status-reserved {
+  background: rgba(255, 193, 7, 0.1);
+  color: #FFC107;
+  border: 1px solid rgba(255, 193, 7, 0.25);
+}
+
+.status-sold {
+  background: rgba(227, 30, 36, 0.1);
+  color: #E31E24;
+  border: 1px solid rgba(227, 30, 36, 0.25);
+}
+
+/* Glow effects */
+.glow-yellow {
+  box-shadow: 0 0 20px rgba(255, 193, 7, 0.2);
+}
+.glow-blue {
+  box-shadow: 0 0 20px rgba(0, 136, 255, 0.2);
+}
+.glow-red {
+  box-shadow: 0 0 20px rgba(227, 30, 36, 0.25);
+}
+
+/* Rotation simulator perspective container */
+.perspective-container {
+  perspective: 1200px;
+}
