@@ -214,7 +214,7 @@ export default function HomePage() {
                     </div>
 
                     <Link 
-                      href={`/murti/${murti.code}`} 
+                      href={`/murti/?code=${murti.code}`} 
                       className={`w-full py-3.5 rounded-full text-center text-xs font-extrabold uppercase tracking-wider transition-all block ${
                         murti.status === 'Available' && (murti.quantity !== undefined ? murti.quantity : 1) > 0
                           ? 'bg-gradient-to-r from-logo-blue-500 to-logo-blue-600 text-white hover:scale-102 active:scale-98 shadow-md glow-blue' 

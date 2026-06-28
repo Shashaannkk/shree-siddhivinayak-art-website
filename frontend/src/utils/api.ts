@@ -219,11 +219,27 @@ const saveOfflineBookings = (bookings: Booking[]) => {
 };
 
 function adjustMurtiPaths(murti: any): Murti {
-  if (!basePath) return murti;
+  const backendHost = API_BASE.replace('/api', '');
   return {
     ...murti,
-    photos: murti.photos.map((p: string) => p.startsWith('/') && !p.startsWith(basePath) ? `${basePath}${p}` : p),
-    videos: murti.videos.map((v: string) => v.startsWith('/') && !v.startsWith(basePath) ? `${basePath}${v}` : v),
+    photos: murti.photos.map((p: string) => {
+      if (p.startsWith('/uploads/')) {
+        return `${backendHost}${p}`;
+      }
+      if (p.startsWith('/') && basePath && !p.startsWith(basePath)) {
+        return `${basePath}${p}`;
+      }
+      return p;
+    }),
+    videos: murti.videos.map((v: string) => {
+      if (v.startsWith('/uploads/')) {
+        return `${backendHost}${v}`;
+      }
+      if (v.startsWith('/') && basePath && !v.startsWith(basePath)) {
+        return `${basePath}${v}`;
+      }
+      return v;
+    }),
   };
 }
 

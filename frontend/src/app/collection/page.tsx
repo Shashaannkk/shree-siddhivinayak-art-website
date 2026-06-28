@@ -4,12 +4,56 @@ import React, { useEffect, useState, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { api, Murti } from '@/utils/api';
-import { Filter, Search, RotateCcw, X } from 'lucide-react';
+import { Filter, Search, RotateCcw, X, Camera, Upload, Image as ImageIcon, Loader2 } from 'lucide-react';
+
+// Helper to convert a file to a Data URL
+function fileToDataURL(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = () => reject(new Error('Failed to read file.'));
+    reader.readAsDataURL(file);
+  });
+}
+
+// Helper to compute a color signature vector of 48 values (4x4 grid of RGB colors)
+async function getImageColorProfile(url: string): Promise<number[]> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      try {
+        const canvas = document.createElement('canvas');
+        canvas.width = 4;
+        canvas.height = 4;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          reject(new Error('Canvas context could not be created.'));
+          return;
+        }
+        ctx.drawImage(img, 0, 0, 4, 4);
+        const imgData = ctx.getImageData(0, 0, 4, 4);
+        const data = imgData.data;
+        const vector: number[] = [];
+        for (let i = 0; i < data.length; i += 4) {
+          vector.push(data[i]);     // R
+          vector.push(data[i + 1]); // G
+          vector.push(data[i + 2]); // B
+        }
+        resolve(vector);
+      } catch (err) {
+        reject(err);
+      }
+    };
+    img.onerror = () => reject(new Error('Image failed to load: ' + url));
+    img.src = url;
+  });
+}
 
 function CollectionContent() {
   const searchParams = useSearchParams();
   
-  const [murtis, setMurtis] = useState<Murti[]>([]);
+  const [murtis, setMurtis] = useState<(Murti & { matchScore?: number })[]>([]);
   const [loading, setLoading] = useState(true);
   
   // Filters State
@@ -21,6 +65,13 @@ function CollectionContent() {
 
   // Mobile Filters toggle
   const [showMobileFilters, setShowMobileFilters] = useState(false);
+
+  // Search by Image State
+  const [searchImage, setSearchImage] = useState<string | null>(null);
+  const [searchImageFile, setSearchImageFile] = useState<File | null>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [showImageModal, setShowImageModal] = useState(false);
+  const [isMatchingActive, setIsMatchingActive] = useState(false);
 
   useEffect(() => {
     async function loadMurtis() {
@@ -39,7 +90,39 @@ function CollectionContent() {
         }
 
         const data = await api.getMurtis(filters);
-        setMurtis(data);
+        
+        if (isMatchingActive && searchImage) {
+          try {
+            const queryProfile = await getImageColorProfile(searchImage);
+            const scoredList = await Promise.all(
+              data.map(async (murti) => {
+                const photoUrl = murti.photos[0];
+                if (!photoUrl) return { ...murti, matchScore: 0 };
+                try {
+                  const murtiProfile = await getImageColorProfile(photoUrl);
+                  let sumSqDiff = 0;
+                  for (let i = 0; i < queryProfile.length; i++) {
+                    const diff = queryProfile[i] - murtiProfile[i];
+                    sumSqDiff += diff * diff;
+                  }
+                  const mse = sumSqDiff / queryProfile.length;
+                  const rmse = Math.sqrt(mse);
+                  const score = Math.max(0, 100 - (rmse / 255) * 100);
+                  return { ...murti, matchScore: Math.round(score) };
+                } catch {
+                  return { ...murti, matchScore: 0 };
+                }
+              })
+            );
+            const sorted = scoredList.sort((a, b) => (b.matchScore || 0) - (a.matchScore || 0));
+            setMurtis(sorted);
+          } catch (err) {
+            console.error("Visual search error during filter updates:", err);
+            setMurtis(data);
+          }
+        } else {
+          setMurtis(data);
+        }
       } catch (err) {
         console.error('Error fetching filtered murtis:', err);
       } finally {
@@ -48,7 +131,7 @@ function CollectionContent() {
     }
     
     loadMurtis();
-  }, [category, status, size, priceRange, search]);
+  }, [category, status, size, priceRange, search, isMatchingActive, searchImage]);
 
   const categories = [
     'Ganpati',
@@ -74,6 +157,60 @@ function CollectionContent() {
     setSize('');
     setPriceRange('');
     setSearch('');
+    setSearchImage(null);
+    setSearchImageFile(null);
+    setIsMatchingActive(false);
+  };
+
+  const handleImageFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      try {
+        setSearchImageFile(file);
+        const dataUrl = await fileToDataURL(file);
+        setSearchImage(dataUrl);
+      } catch (err) {
+        alert("Failed to read the file.");
+      }
+    }
+  };
+
+  const runImageSearch = async () => {
+    if (!searchImage) return;
+    setIsAnalyzing(true);
+    try {
+      const queryProfile = await getImageColorProfile(searchImage);
+      const scoredList = await Promise.all(
+        murtis.map(async (murti) => {
+          const photoUrl = murti.photos[0];
+          if (!photoUrl) return { ...murti, matchScore: 0 };
+          try {
+            const murtiProfile = await getImageColorProfile(photoUrl);
+            let sumSqDiff = 0;
+            for (let i = 0; i < queryProfile.length; i++) {
+              const diff = queryProfile[i] - murtiProfile[i];
+              sumSqDiff += diff * diff;
+            }
+            const mse = sumSqDiff / queryProfile.length;
+            const rmse = Math.sqrt(mse);
+            const score = Math.max(0, 100 - (rmse / 255) * 100);
+            return { ...murti, matchScore: Math.round(score) };
+          } catch (e) {
+            console.warn(`Could not compute color profile for ${murti.code}:`, e);
+            return { ...murti, matchScore: 0 };
+          }
+        })
+      );
+      const sorted = scoredList.sort((a, b) => (b.matchScore || 0) - (a.matchScore || 0));
+      setMurtis(sorted);
+      setIsMatchingActive(true);
+      setShowImageModal(false);
+    } catch (err) {
+      console.error('Error running image match search:', err);
+      alert('Visual analysis failed. Please verify the image file format.');
+    } finally {
+      setIsAnalyzing(false);
+    }
   };
 
   return (
@@ -100,13 +237,45 @@ function CollectionContent() {
             className="w-full pl-12 pr-4 py-4 bg-[#2C0001]/80 border border-festive-yellow-500/20 focus:border-festive-yellow-500/50 rounded-2xl text-sm outline-none text-white placeholder-gray-400 transition-colors"
           />
         </div>
-        <button
-          onClick={() => setShowMobileFilters(true)}
-          className="md:hidden flex items-center justify-center gap-2 px-6 py-4 bg-[#2C0001] border border-festive-yellow-500/20 rounded-2xl text-sm font-semibold hover:border-festive-yellow-500/40"
-        >
-          <Filter className="w-4 h-4 text-logo-blue-500" /> Filters
-        </button>
+        <div className="flex gap-3">
+          <button
+            onClick={() => setShowImageModal(true)}
+            className="flex items-center justify-center gap-2 px-6 py-4 bg-[#2C0001] border border-festive-yellow-500/20 rounded-2xl text-sm font-bold text-gray-200 hover:border-festive-yellow-500/40 cursor-pointer"
+          >
+            <Camera className="w-4 h-4 text-logo-blue-500" /> <span>Search by Image</span>
+          </button>
+          <button
+            onClick={() => setShowMobileFilters(true)}
+            className="md:hidden flex items-center justify-center gap-2 px-6 py-4 bg-[#2C0001] border border-festive-yellow-500/20 rounded-2xl text-sm font-semibold hover:border-festive-yellow-500/40"
+          >
+            <Filter className="w-4 h-4 text-logo-blue-500" /> Filters
+          </button>
+        </div>
       </div>
+
+      {/* Active Image Search Banner */}
+      {isMatchingActive && searchImage && (
+        <div className="mb-8 p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-between gap-4 text-sm text-emerald-200">
+          <div className="flex items-center gap-3">
+            <img src={searchImage} className="w-12 h-12 object-cover rounded-lg border border-emerald-500/30 shrink-0" alt="Query reference" />
+            <div>
+              <p className="font-bold">Visual Image Matching Search Active</p>
+              <p className="text-xs text-gray-300">Catalog currently sorted by visual similarity to your uploaded photo.</p>
+            </div>
+          </div>
+          <button 
+            onClick={() => {
+              setIsMatchingActive(false);
+              setSearchImage(null);
+              setSearchImageFile(null);
+              resetFilters();
+            }}
+            className="px-4 py-2 border border-emerald-500/30 hover:bg-emerald-500/20 text-xs font-bold rounded-full transition-colors uppercase tracking-wider cursor-pointer shrink-0"
+          >
+            Clear Image Search
+          </button>
+        </div>
+      )}
 
       <div className="flex gap-8 items-start">
         {/* LEFT COLUMN: FILTERS (DESKTOP) */}
@@ -256,6 +425,13 @@ function CollectionContent() {
                       />
                     </div>
 
+                    {/* Visual match badge */}
+                    {murti.matchScore !== undefined && (
+                      <div className="absolute top-4 left-16 z-10 bg-emerald-500 border border-emerald-400 text-white font-extrabold text-[10px] px-2.5 py-1.5 rounded-full shadow-md animate-pulse">
+                        🎯 {murti.matchScore}% Match
+                      </div>
+                    )}
+
                     {/* Status Badge */}
                     <div className="absolute top-4 right-4">
                       <span className={`px-3 py-1.5 rounded-full text-xs font-extrabold uppercase tracking-wider ${
@@ -306,7 +482,7 @@ function CollectionContent() {
                       </div>
 
                       <Link 
-                        href={`/murti/${murti.code}`} 
+                        href={`/murti/?code=${murti.code}`} 
                         className={`w-full py-3 rounded-full text-center text-xs font-bold uppercase tracking-wider transition-all block ${
                           murti.status === 'Available' && (murti.quantity !== undefined ? murti.quantity : 1) > 0
                             ? 'bg-gradient-to-r from-logo-blue-500 to-logo-blue-600 text-white hover:scale-102 active:scale-98 shadow-md' 
@@ -418,6 +594,91 @@ function CollectionContent() {
                 Apply
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* SEARCH BY IMAGE MODAL */}
+      {showImageModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md p-4">
+          <div className="blinkit-card w-full max-w-xl rounded-[32px] p-6 sm:p-8 border border-festive-yellow-500/20 relative animate-in fade-in zoom-in duration-200">
+            
+            {/* Header */}
+            <div className="flex justify-between items-start border-b border-festive-yellow-500/15 pb-4 mb-6">
+              <div>
+                <h3 className="text-xl font-serif font-black text-festive-yellow-500">Visual Image Search</h3>
+                <p className="text-xs text-gray-300 mt-1">Match murtis in our catalog by color profile and layout</p>
+              </div>
+              <button 
+                onClick={() => { setShowImageModal(false); if (!isMatchingActive) { setSearchImage(null); setSearchImageFile(null); } }}
+                className="text-gray-400 hover:text-white text-lg font-bold cursor-pointer"
+                disabled={isAnalyzing}
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Content */}
+            {isAnalyzing ? (
+              <div className="text-center py-12 flex flex-col items-center justify-center">
+                <Loader2 className="w-12 h-12 text-festive-yellow-500 animate-spin mb-4" />
+                <h4 className="text-lg font-serif font-black text-festive-yellow-500 mb-2">Analyzing Image Patterns</h4>
+                <p className="text-sm text-gray-300 max-w-xs mx-auto">Running color signature matching across all database creations. Please wait...</p>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-6">
+                {!searchImage ? (
+                  <label className="border-2 border-dashed border-festive-yellow-500/20 hover:border-festive-yellow-500/50 rounded-2xl p-10 text-center flex flex-col items-center gap-4 cursor-pointer transition-colors bg-[#2C0001]/20">
+                    <input 
+                      type="file" 
+                      accept="image/*" 
+                      onChange={handleImageFileChange} 
+                      className="hidden" 
+                    />
+                    <Upload className="w-12 h-12 text-logo-blue-500 animate-bounce" />
+                    <div>
+                      <span className="text-sm font-bold text-gray-200 block mb-1">Click to Upload Image</span>
+                      <span className="text-xs text-gray-400">Supports JPG, PNG, WEBP formats</span>
+                    </div>
+                  </label>
+                ) : (
+                  <div className="flex flex-col gap-4">
+                    <div className="relative h-64 w-full rounded-2xl overflow-hidden border border-festive-yellow-500/25 bg-black/40 flex items-center justify-center">
+                      <img src={searchImage} className="object-contain w-full h-full" alt="Selected search" />
+                    </div>
+                    <div className="flex justify-between items-center text-xs text-gray-300 bg-[#1C0102] p-3 rounded-xl border border-festive-yellow-500/10">
+                      <div className="truncate pr-4">
+                        <span className="block text-gray-400">File Name:</span>
+                        <strong className="text-gray-200 font-mono">{searchImageFile?.name || 'Uploaded File'}</strong>
+                      </div>
+                      <button 
+                        onClick={() => { setSearchImage(null); setSearchImageFile(null); }}
+                        className="px-3.5 py-1.5 border border-festive-red-500 text-red-300 rounded-full hover:bg-festive-red-500/10 transition-colors cursor-pointer shrink-0 uppercase font-black tracking-wider text-[10px]"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex gap-4 border-t border-festive-yellow-500/15 pt-6 mt-2">
+                  <button
+                    onClick={() => { setShowImageModal(false); if (!isMatchingActive) { setSearchImage(null); setSearchImageFile(null); } }}
+                    className="w-1/2 py-3 border border-festive-yellow-500/20 text-gray-300 rounded-full text-xs uppercase tracking-wider font-bold hover:bg-[#1C0102]/60 transition-colors cursor-pointer"
+                    disabled={isAnalyzing}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={runImageSearch}
+                    disabled={isAnalyzing || !searchImage}
+                    className="w-1/2 py-3 bg-gradient-to-r from-[#FFC107] to-[#FFB300] text-black rounded-full text-xs uppercase tracking-wider font-extrabold shadow-md hover:scale-102 active:scale-98 transition-transform disabled:opacity-50 cursor-pointer"
+                  >
+                    Start Matching Search
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}

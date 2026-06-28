@@ -1,15 +1,15 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { api, Murti } from '@/utils/api';
 import { ArrowLeft, Shield, Truck, Calendar, Sparkles, MessageCircle, AlertTriangle, Printer, CheckCircle } from 'lucide-react';
 import Link from 'next/link';
 
 export default function MurtiDetailPage() {
-  const params = useParams();
+  const searchParams = useSearchParams();
   const router = useRouter();
-  const code = params.code as string;
+  const code = searchParams.get('code') || '';
 
   const [murti, setMurti] = useState<Murti | null>(null);
   const [loading, setLoading] = useState(true);
@@ -215,6 +215,13 @@ export default function MurtiDetailPage() {
     }
   };
 
+  const media = murti
+    ? [
+        ...murti.photos.map(url => ({ type: 'image' as const, url })),
+        ...murti.videos.map(url => ({ type: 'video' as const, url }))
+      ]
+    : [];
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 bg-festive-red-gradient">
       {/* Back Button */}
@@ -227,12 +234,24 @@ export default function MurtiDetailPage() {
         <div className="lg:col-span-7 flex flex-col gap-6">
           {/* Main Photo Viewport */}
           <div className="relative h-[480px] w-full rounded-[32px] overflow-hidden bg-black/30 border border-festive-yellow-500/15 flex items-center justify-center perspective-container shadow-2xl">
-            <img 
-              src={murti.photos[activePhoto] || 'https://images.unsplash.com/photo-1609252509102-ee7026b2161f?w=800&auto=format&fit=crop'} 
-              alt={murti.name} 
-              style={{ transform: `rotateY(${rotationAngle}deg) scale(1.05)` }}
-              className="object-contain w-full h-full transition-transform duration-100 ease-out"
-            />
+            {media.length > 0 && media[activePhoto]?.type === 'video' ? (
+              <video 
+                src={media[activePhoto].url} 
+                controls 
+                autoPlay 
+                loop 
+                muted 
+                playsInline
+                className="w-full h-full object-contain relative z-10"
+              />
+            ) : (
+              <img 
+                src={media[activePhoto]?.url || 'https://images.unsplash.com/photo-1609252509102-ee7026b2161f?w=800&auto=format&fit=crop'} 
+                alt={murti.name} 
+                style={{ transform: `rotateY(${rotationAngle}deg) scale(1.05)` }}
+                className="object-contain w-full h-full transition-transform duration-100 ease-out"
+              />
+            )}
             {/* Watermark Logo */}
             <div className="absolute top-4 left-4 z-10 opacity-70 pointer-events-none">
               <img 
@@ -252,40 +271,51 @@ export default function MurtiDetailPage() {
               </span>
             </div>
             
-            {/* 360 Indicator */}
-            <div className="absolute bottom-4 left-4 bg-[#1C0102]/85 border border-festive-yellow-500/25 px-4 py-2 rounded-full text-xs text-festive-yellow-500 font-bold tracking-wider uppercase">
-              360° Profile View
-            </div>
+            {/* 360 Indicator - only for static images */}
+            {(!media[activePhoto] || media[activePhoto].type === 'image') && (
+              <div className="absolute bottom-4 left-4 bg-[#1C0102]/85 border border-festive-yellow-500/25 px-4 py-2 rounded-full text-xs text-festive-yellow-500 font-bold tracking-wider uppercase">
+                360° Profile View
+              </div>
+            )}
           </div>
 
-          {/* 360 Degree Perspective Simulator Slider */}
-          <div className="blinkit-card p-5 rounded-[24px] border border-festive-yellow-500/10">
-            <div className="flex justify-between text-xs text-gray-300 mb-3 font-bold uppercase tracking-wider">
-              <span>◄ Left Angle</span>
-              <span className="text-festive-yellow-500">Rotate View Slider</span>
-              <span>Right Angle ►</span>
+          {/* 360 Degree Perspective Simulator Slider - only for static images */}
+          {(!media[activePhoto] || media[activePhoto].type === 'image') && (
+            <div className="blinkit-card p-5 rounded-[24px] border border-festive-yellow-500/10">
+              <div className="flex justify-between text-xs text-gray-300 mb-3 font-bold uppercase tracking-wider">
+                <span>◄ Left Angle</span>
+                <span className="text-festive-yellow-500">Rotate View Slider</span>
+                <span>Right Angle ►</span>
+              </div>
+              <input 
+                type="range" 
+                min="-45" 
+                max="45" 
+                value={rotationAngle}
+                onChange={(e) => setRotationAngle(Number(e.target.value))}
+                className="w-full h-1.5 bg-red-950/60 rounded-full appearance-none cursor-pointer accent-logo-blue-500"
+              />
             </div>
-            <input 
-              type="range" 
-              min="-45" 
-              max="45" 
-              value={rotationAngle}
-              onChange={(e) => setRotationAngle(Number(e.target.value))}
-              className="w-full h-1.5 bg-red-950/60 rounded-full appearance-none cursor-pointer accent-logo-blue-500"
-            />
-          </div>
+          )}
 
           {/* Photo Carousel Thumbnails */}
           <div className="flex gap-4 overflow-x-auto pb-2">
-            {murti.photos.map((p, idx) => (
+            {media.map((item, idx) => (
               <button
                 key={idx}
                 onClick={() => { setActivePhoto(idx); setRotationAngle(0); }}
-                className={`w-24 h-20 rounded-[18px] overflow-hidden border-2 shrink-0 transition-all ${
+                className={`w-24 h-20 rounded-[18px] overflow-hidden border-2 shrink-0 transition-all relative ${
                   activePhoto === idx ? 'border-logo-blue-500 shadow-lg scale-95' : 'border-festive-yellow-500/10 hover:border-festive-yellow-500/30'
                 }`}
               >
-                <img src={p} alt="" className="object-cover w-full h-full" />
+                {item.type === 'video' ? (
+                  <div className="w-full h-full bg-black/50 flex items-center justify-center relative">
+                    <video src={item.url} className="object-cover w-full h-full opacity-60" muted />
+                    <span className="absolute inset-0 flex items-center justify-center text-white font-bold text-[10px] bg-black/40 uppercase tracking-widest">▶ Video</span>
+                  </div>
+                ) : (
+                  <img src={item.url} alt="" className="object-cover w-full h-full" />
+                )}
               </button>
             ))}
           </div>
