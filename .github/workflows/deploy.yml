@@ -42,6 +42,11 @@ jobs:
         env:
           NEXT_PUBLIC_BASE_PATH: /shree-siddhivinayak-art-website
 
+      - name: Configure GitHub Pages Static Assets & Fallbacks
+        run: |
+          touch frontend/out/.nojekyll
+          cp frontend/out/index.html frontend/out/404.html
+
       - name: Setup Pages
         uses: actions/configure-pages@v4
 
